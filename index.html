@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite LoFi Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            background-color: #2c242e;
+            color: #dcd1c4;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #container {
+            text-align: center;
+            border: 2px solid #5e5066;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        h1 { margin-bottom: 10px; letter-spacing: 2px; }
+        p { color: #8b7d96; font-size: 0.9em; margin-bottom: 30px; }
+        
+        button {
+            background: transparent;
+            border: 2px solid #dcd1c4;
+            color: #dcd1c4;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #dcd1c4;
+            color: #2c242e;
+            box-shadow: 0 0 15px #dcd1c4;
+        }
+        #status { margin-top: 20px; font-size: 0.8em; opacity: 0; transition: opacity 1s; }
+        
+        /* Subtle animation for the background */
+        @keyframes drift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container">
+        <h1>INFINITE LOFI</h1>
+        <p>Generative Chill Beats & Jazz Chords</p>
+        <button id="playBtn">START LISTENING</button>
+        <div id="status">Generating...</div>
+    </div>
+
+    <script>
+        // 1. SETUP & STATE
+        let isPlaying = false;
+        const playBtn = document.getElementById('playBtn');
+        const statusEl = document.getElementById('status');
+
+        // 2. INSTRUMENT DEFINITIONS
+        let chordSynth, drumKick, drumSnare, drumHihat, vinylNoise;
+        let masterFilter, masterReverb, tapeWarble;
+
+        async function initAudio() {
+            await Tone.start();
+            
+            // --- Effects Chain (The "LoFi" Sound) ---
+            
+            // Tape Warble: Subtle vibrato to simulate uneven tape speed
+            tapeWarble = new Tone.Vibrato({
+                frequency: 0.2, // Very slow wobble
+                depth: 0.05,    // Subtle pitch shift
+                wet: 1          // 100% effect
+            });
+
+            // Lowpass Filter: Cuts high frequencies for that "muffled/underwater" sound
+            masterFilter = new Tone.Filter(3000, "lowpass");
+            
+            // Reverb: Adds space
+            masterReverb = new Tone.Reverb({
+                decay: 2.5,
+                preDelay: 0.2,
+                wet: 0.3
+            }).toDestination();
+
+            // Connect Chain: Instruments -> Warble -> Filter -> Reverb -> Speakers
+            const masterBus = new Tone.Gain(0.8).connect(tapeWarble);
+            tapeWarble.connect(masterFilter);
+            masterFilter.connect(masterReverb);
+
+
+            // --- Instruments ---
+
+            // 1. Keys (Rhodes-ish PolySynth)
+            chordSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 2 }
+            }).connect(masterBus);
+            chordSynth.volume.value = -8;
+
+            // 2. Kick Drum (MembraneSynth)
+            drumKick = new Tone.MembraneSynth({
+                pitchDecay: 0.05,
+                octaves: 4,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4 }
+            }).connect(masterBus);
+            drumKick.volume.value = -2;
+
+            // 3. Snare/Hi-hat (NoiseSynth)
+            drumSnare = new Tone.NoiseSynth({
+                noise: { type: "white" },
+                envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
+            }).connect(masterBus);
+            drumSnare.volume.value = -10;
+
+            // 4. Vinyl Crackle (Filtered Noise)
+            vinylNoise = new Tone.Noise("pink").start();
+            const crackleFilter = new Tone.AutoFilter({
+                frequency: 0.5,
+                depth: 0.6,
+                baseFrequency: 400
+            }).connect(masterBus).start();
+            vinylNoise.connect(crackleFilter);
+            vinylNoise.volume.value = -22; // Keep it subtle background texture
+
+            // --- Music Theory Logic ---
+            
+            // Common LoFi Jazz Chords (Major 7ths, Minor 9ths)
+            const chords = [
+                ['C4', 'E4', 'G4', 'B4'],  // C Maj7
+                ['A3', 'C4', 'E4', 'G4'],  // A min7
+                ['F3', 'A3', 'C4', 'E4'],  // F Maj7
+                ['D4', 'F4', 'A4', 'C5'],  // D min7
+                ['G3', 'B3', 'D4', 'F4'],  // G Dom7
+                ['E4', 'G4', 'B4', 'D5'],  // E min7
+            ];
+
+            // 3. SEQUENCER LOOP
+            let step = 0;
+            
+            Tone.Transport.bpm.value = 80; // Slow, chill tempo
+
+            // The main loop repeats every 16th note
+            Tone.Transport.scheduleRepeat((time) => {
+                const beat = step % 16;
+                
+                // --- Drums ---
+                // Kick: beat 0 and beat 10 (syncopated)
+                if (beat === 0 || beat === 10) {
+                    drumKick.triggerAttackRelease("C1", "8n", time);
+                }
+                // Random ghost kicks
+                if (beat === 7 && Math.random() > 0.7) {
+                    drumKick.triggerAttackRelease("C1", "16n", time, 0.5); 
+                }
+
+                // Snare: beat 4 and 12 (standard backbeat)
+                if (beat === 4 || beat === 12) {
+                    drumSnare.triggerAttackRelease("16n", time);
+                }
+                
+                // Hi-hats: Every even beat, with random probability for others
+                if (beat % 2 === 0 || Math.random() > 0.6) {
+                    // Slight velocity variation makes it sound more human
+                    drumSnare.triggerAttackRelease("32n", time, Math.random() * 0.5 + 0.2); 
+                }
+
+                // --- Chords ---
+                // Change chord every 4 beats (1 bar)
+                if (beat === 0 && step % 32 === 0) { // New chord every 2 bars
+                    const currentChord = chords[Math.floor(Math.random() * chords.length)];
+                    // Strum effect: play notes slightly offset
+                    currentChord.forEach((note, index) => {
+                        chordSynth.triggerAttackRelease(note, "2m", time + (index * 0.05));
+                    });
+                }
+                
+                // Sometimes play a random single note from the chord (melody)
+                if (Math.random() > 0.8) {
+                    const currentChord = chords[Math.floor(Math.random() * chords.length)];
+                    const randomNote = currentChord[Math.floor(Math.random() * currentChord.length)];
+                    chordSynth.triggerAttackRelease(randomNote, "8n", time);
+                }
+
+                step++;
+            }, "16n");
+        }
+
+        // 4. USER INTERACTION
+        playBtn.addEventListener('click', async () => {
+            if (!isPlaying) {
+                await initAudio();
+                Tone.Transport.start();
+                playBtn.innerText = "STOP";
+                playBtn.style.borderColor = "#ff5555";
+                statusEl.style.opacity = 1;
+                statusEl.innerText = "Vibing...";
+                isPlaying = true;
+            } else {
+                Tone.Transport.stop();
+                Tone.Destination.mute = true; // Hard mute to stop tails
+                location.reload(); // Simplest way to reset audio context cleanly
+            }
+        });
+    </script>
+</body>
+</html>
