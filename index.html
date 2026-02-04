@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evolving LoFi Generator</title>
+    <title>Melodic LoFi - Triads</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         body {
-            background-color: #0f0f0f;
-            color: #a0a0a0;
+            background-color: #202028;
+            color: #d0d0d8;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
@@ -16,206 +16,249 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            transition: background-color 10s ease;
         }
         #container {
-            border: 1px solid #333;
-            padding: 50px;
-            border-radius: 4px;
+            border: 1px solid #444;
+            padding: 40px;
+            border-radius: 12px;
             text-align: center;
-            width: 300px;
+            width: 320px;
+            background: #2a2a35;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
         }
-        h1 { color: #50fa7b; font-size: 1.2rem; margin-bottom: 5px; letter-spacing: 2px; }
+        h1 { color: #8be9fd; font-size: 1.2rem; margin-bottom: 5px; letter-spacing: 2px; }
         
         #readout {
-            margin: 30px 0;
+            margin: 20px 0;
             text-align: left;
-            font-size: 0.85rem;
-            line-height: 1.6;
+            font-size: 0.8rem;
+            line-height: 1.8;
             color: #f8f8f2;
+            border-top: 1px solid #444;
+            border-bottom: 1px solid #444;
+            padding: 15px 0;
         }
         .label { color: #6272a4; margin-right: 10px; }
-        .value { color: #ff79c6; }
+        .value { color: #f1fa8c; float: right;}
 
-        button {
-            background: transparent;
-            color: #50fa7b;
-            border: 1px solid #50fa7b;
-            padding: 10px 30px;
+        /* MAIN BUTTON */
+        #playBtn {
+            background: #8be9fd;
+            color: #202028;
+            border: none;
+            padding: 15px 0;
+            width: 100%;
             cursor: pointer;
             font-family: inherit;
-            transition: 0.3s;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: 0.2s;
+            margin-bottom: 25px;
+            border-radius: 4px;
         }
-        button:hover { background: #50fa7b; color: #0f0f0f; }
+        #playBtn:hover { background: #b9f5ff; transform: translateY(-2px); }
+
+        /* SLIDER */
+        .vol-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #8be9fd;
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 70%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #f1fa8c;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444;
+            border-radius: 2px;
+        }
         
-        /* Loading animation */
-        #loader { height: 2px; width: 0%; background: #bd93f9; transition: width 0.2s; margin-top:20px;}
+        /* VISUALIZER */
+        .vis-row { display: flex; justify-content: space-between; height: 10px; margin-top: 20px; gap: 2px;}
+        .vis-bar { width: 100%; background: #444; transition: height 0.1s; height: 100%; border-radius: 2px;}
+        .vis-active { background: #f1fa8c; box-shadow: 0 0 10px #f1fa8c;}
     </style>
 </head>
 <body>
 
     <div id="container">
-        <h1>EVOLVING LOFI</h1>
+        <h1>PURE TRIADS LOFI</h1>
         
         <div id="readout">
-            <div><span class="label">PHASE:</span><span id="ui-phase" class="value">Stopped</span></div>
-            <div><span class="label">FILTER:</span><span id="ui-filter" class="value">--</span></div>
-            <div><span class="label">KEY:</span><span id="ui-key" class="value">--</span></div>
-            <div><span class="label">DRIFT:</span><span id="ui-drift" class="value">--</span></div>
+            <div><span class="label">BEAT:</span><span class="value">Locked / Steady</span></div>
+            <div><span class="label">CHORD:</span><span id="ui-chord" class="value">--</span></div>
+            <div><span class="label">MELODY:</span><span id="ui-note" class="value">--</span></div>
         </div>
 
-        <button id="playBtn">INITIATE</button>
-        <div id="loader"></div>
+        <button id="playBtn">START VIBE</button>
+
+        <div class="vol-container">
+            <span>MASTER VOL</span>
+            <input type="range" id="volumeSlider" min="0" max="100" value="80">
+        </div>
+
+        <div class="vis-row">
+            <div id="v1" class="vis-bar"></div>
+            <div id="v2" class="vis-bar"></div>
+            <div id="v3" class="vis-bar"></div>
+            <div id="v4" class="vis-bar"></div>
+        </div>
     </div>
 
     <script>
-        // --- STATE VARIABLES ---
+        // --- STATE ---
         let isPlaying = false;
         let measureCount = 0;
         
         // --- AUDIO NODES ---
-        let keys, kick, snare, hihat, bass;
-        let masterGain, sidechainMult, masterFilter, reverb;
+        let chordSynth, melodySynth, bassSynth, kick, snare, hihat;
+        let masterGain, sidechainMult, masterReverb, melodyDelay;
 
-        // --- PROGRESSIONS ---
-        // We will swap between these two moods
-        const progressionA = [ // "The Nostalgia"
-            ["F3", "A3", "C4", "E4"], // F Maj7
-            ["E3", "G3", "B3", "D4"], // E min7
-            ["D3", "F3", "A3", "C4"], // D min7
-            ["G2", "F3", "A3", "B3"]  // G Dom7
+        // --- MUSICAL DATA (C MAJOR TRIADS ONLY) ---
+        // Clean chords: Root, 3rd, 5th. No 7ths.
+        const triads = [
+            { name: "C Major", notes: ["C4", "E4", "G4"] },
+            { name: "F Major", notes: ["F3", "A3", "C4"] },
+            { name: "A Minor", notes: ["A3", "C4", "E4"] },
+            { name: "G Major", notes: ["G3", "B3", "D4"] },
+            { name: "E Minor", notes: ["E3", "G3", "B3"] },
+            { name: "D Minor", notes: ["D3", "F3", "A3"] }
         ];
-        const progressionB = [ // "The Dream"
-            ["Db3", "F3", "Ab3", "C4"], // Db Maj7
-            ["C3", "Eb3", "G3", "Bb3"], // C min7
-            ["Bb2", "D3", "F3", "A3"],  // Bb Maj7
-            ["Eb3", "G3", "Bb3", "D4"]  // Eb Maj7
-        ];
-        
-        let currentProgression = progressionA;
+
+        // Pentatonic Scale for Melody (Safe notes only)
+        const melodyScale = ["C5", "D5", "E5", "G5", "A5", "C6"];
 
         async function startSystem() {
             await Tone.start();
-            Tone.Transport.bpm.value = 78;
+            Tone.Transport.bpm.value = 82; // Slightly faster, steadier head-nod
 
-            // 1. SIGNAL CHAIN
-            // Everything goes into a LowPass filter that we will automate slowly
-            masterFilter = new Tone.Filter(600, "lowpass"); 
-            reverb = new Tone.Reverb({ decay: 4, wet: 0.4 }).toDestination();
-            sidechainMult = new Tone.Multiply(1); // Used for ducking volume
+            // 1. MASTER CHAIN
+            masterGain = new Tone.Gain(0.8).toDestination();
             
-            // Connect: Source -> SidechainMult -> Filter -> Reverb -> Out
-            sidechainMult.connect(masterFilter);
-            masterFilter.connect(reverb);
+            // Sidechain Logic (Ducking)
+            sidechainMult = new Tone.Multiply(1);
+            
+            // Reverb (Space)
+            masterReverb = new Tone.Reverb({ decay: 2.5, wet: 0.3 }).connect(masterGain);
+            sidechainMult.connect(masterReverb);
+
+            // Melody Delay (Echo)
+            melodyDelay = new Tone.FeedbackDelay("8n.", 0.4).connect(masterGain);
+
 
             // 2. INSTRUMENTS
 
-            // Polymorphic Keys (Changes tone over time)
-            keys = new Tone.PolySynth(Tone.FMSynth, {
-                harmonicity: 1,
-                modulationIndex: 1,
-                envelope: { attack: 0.2, decay: 0.5, sustain: 0.5, release: 2 }
+            // CHORDS: Switched to gentle Triangle waves (Very clean, no harshness)
+            chordSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" }, // Triangle = Smooth/Flute-like
+                volume: -6,
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 1 }
             }).connect(sidechainMult);
-            keys.volume.value = -8;
 
-            // Simple Bass (Sine wave)
-            bass = new Tone.MonoSynth({
-                oscillator: { type: "triangle" },
-                envelope: { attack: 0.1, decay: 0.3, sustain: 0.8, release: 1 },
-                filterEnvelope: { attack: 0.001, decay: 0.1, sustain: 0.5, baseFrequency: 100, octaves: 2 }
+            // MELODY: Soft Sine wave with glide (Portamento)
+            melodySynth = new Tone.Synth({
+                oscillator: { type: "sine" },
+                portamento: 0.05, // Slides between notes
+                volume: -12,
+                envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 1.2 }
+            }).connect(melodyDelay);
+
+            // BASS: Deep Sine
+            bassSynth = new Tone.MonoSynth({
+                oscillator: { type: "sine" },
+                volume: -4,
+                envelope: { attack: 0.1, decay: 0.3, sustain: 0.9, release: 0.5 }
             }).connect(sidechainMult);
-            bass.volume.value = -6;
 
-            // Drums (Kick bypasses filter so it stays thumping, Snare/Hat go through filter)
-            kick = new Tone.MembraneSynth().toDestination(); // Kick is raw
-            kick.volume.value = -2;
+            // DRUMS: Locked pattern
+            kick = new Tone.MembraneSynth({ volume: -2 }).connect(masterGain); // Kick bypasses reverb/sidechain for punch
+            
+            snare = new Tone.NoiseSynth({ 
+                volume: -10,
+                envelope: { attack: 0.001, decay: 0.2, sustain: 0 } 
+            }).connect(masterReverb);
 
-            snare = new Tone.NoiseSynth({
-                envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
-            }).connect(masterFilter); // Snare gets filtered
-            snare.volume.value = -12;
-
-            hihat = new Tone.MetalSynth({
-                harmonicity: 5.1,
-                modulationIndex: 32,
-                resonance: 4000,
-                octaves: 1.5,
-                envelope: { attack: 0.001, decay: 0.1, release: 0.01 }
-            }).connect(masterFilter);
-            hihat.volume.value = -22;
+            hihat = new Tone.MetalSynth({ 
+                volume: -20,
+                envelope: { attack: 0.001, decay: 0.05, release: 0.01 },
+                harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5
+            }).connect(masterReverb);
 
 
-            // 3. THE CONDUCTOR (Loop)
-            // Loops every 16th note
+            // 3. THE LOOP (100% Full Beat, No Breakdowns)
             Tone.Transport.scheduleRepeat((time) => {
                 const step = measureCount % 16;
-                const totalMeasures = Math.floor(measureCount / 16);
+                visualize(step);
+
+                // --- DRUMS (Steady Pattern) ---
                 
-                // --- A. EVOLUTION LOGIC (The "Slow Change") ---
-                // Every 32 steps (2 bars), check if we need to evolve parameters
-                if (step === 0 && measureCount % 32 === 0) {
-                    evolveSound(time);
+                // Kick: 0, 10, and occasionally 7 (syncopated)
+                if (step === 0 || step === 10) {
+                    playKick(time);
+                } else if (step === 7 && Math.random() > 0.5) {
+                    playKick(time);
                 }
 
-                // --- B. ARRANGEMENT LOGIC (Building Layers) ---
-                // We define intensity based on total bars played
-                // Cycle: Intro (0-8) -> Build (8-16) -> Full (16-32) -> Breakdown (32-40)
-                const arrangementCycle = Math.floor(measureCount / 64) % 4; // 0, 1, 2, or 3
-                updateUI(arrangementCycle);
-
-                let playKick = false;
-                let playSnare = false;
-                let playHats = false;
-
-                if (arrangementCycle === 0) { // Phase 1: Just Chords + Sparse Hats
-                    playHats = true; 
-                } else if (arrangementCycle === 1) { // Phase 2: Add Kick (No snare)
-                    playKick = true;
-                    playHats = true;
-                } else if (arrangementCycle === 2) { // Phase 3: Full Beat
-                    playKick = true;
-                    playSnare = true;
-                    playHats = true;
-                } else { // Phase 4: Breakdown (Just Chords, filtered down)
-                     // Silence drums
-                }
-
-                // --- C. PLAYBACK ---
-                
-                // KICK (Beat 0 & 10)
-                if (playKick && (step === 0 || step === 10)) {
-                    kick.triggerAttackRelease("C1", "8n", time);
-                    // Sidechain Ducking
-                    sidechainMult.setValueAtTime(0.1, time);
-                    sidechainMult.linearRampToValueAtTime(1, time + 0.2);
-                }
-
-                // SNARE (Beat 4 & 12)
-                if (playSnare && (step === 4 || step === 12)) {
+                // Snare: Always 4 and 12
+                if (step === 4 || step === 12) {
                     snare.triggerAttackRelease("16n", time);
                 }
 
-                // HATS (Beat 0, 2, 4...)
-                if (playHats && step % 2 === 0) {
-                    // Randomize velocity for human feel
-                    hihat.triggerAttackRelease("32n", time, Math.random()*0.5 + 0.3);
+                // Hats: Every even beat + random ghosts
+                if (step % 2 === 0) {
+                    hihat.triggerAttackRelease("32n", time, 0.6);
+                } else if (Math.random() > 0.7) {
+                    hihat.triggerAttackRelease("32n", time, 0.2); // Soft ghost hat
                 }
 
-                // CHORDS (Change every 16 steps / 1 bar)
-                if (step === 0) {
-                    // Pick chord from current progression
-                    const chordIdx = Math.floor(measureCount / 16) % 4;
-                    const chord = currentProgression[chordIdx];
-                    
-                    // Play Keys
-                    chord.forEach((n, i) => {
-                        keys.triggerAttackRelease(n, "2m", time + i*0.03);
-                    });
 
-                    // Play Bass (Root note of chord)
-                    // We parse the root note (e.g., "F3" -> "F1")
-                    let root = chord[0].replace("3", "1").replace("2", "1");
-                    if(playKick) bass.triggerAttackRelease(root, "1m", time);
+                // --- CHORDS (Change every bar) ---
+                if (step === 0) {
+                    // Pick a random triad
+                    const chordObj = triads[Math.floor(Math.random() * triads.length)];
+                    
+                    // Update UI
+                    Tone.Draw.schedule(() => {
+                        document.getElementById('ui-chord').innerText = chordObj.name;
+                    }, time);
+
+                    // Play Chord
+                    chordSynth.triggerAttackRelease(chordObj.notes, "1m", time);
+                    
+                    // Play Root Bass Note (Lower octave)
+                    const bassNote = chordObj.notes[0].replace("4", "2").replace("3", "2");
+                    bassSynth.triggerAttackRelease(bassNote, "1m", time);
+                }
+
+                // --- MELODY (Randomized Soft Noodling) ---
+                // Only play on 8th notes (steps 0, 2, 4...) to keep it chill
+                if (step % 2 === 0 && Math.random() > 0.4) {
+                    // Pick a note from safe scale
+                    const note = melodyScale[Math.floor(Math.random() * melodyScale.length)];
+                    
+                    // 20% chance to slide to a higher octave for variation
+                    const finalNote = (Math.random() > 0.8) ? note.replace("5", "6") : note;
+
+                    melodySynth.triggerAttackRelease(finalNote, "4n", time);
+                    
+                    Tone.Draw.schedule(() => {
+                        document.getElementById('ui-note').innerText = finalNote;
+                    }, time);
                 }
 
                 measureCount++;
@@ -224,52 +267,37 @@
             Tone.Transport.start();
         }
 
-        // 4. THE EVOLUTION ENGINE
-        function evolveSound(time) {
-            // 1. Slow Filter Sweep (Muffled <-> Bright)
-            // Uses a Sine wave logic based on time
-            const now = Tone.now();
-            const sweep = Math.sin(now * 0.05); // Slow oscillation
-            // Map -1/1 to Frequency 200Hz - 3000Hz
-            const newFreq = 1600 + (sweep * 1400); 
-            masterFilter.frequency.rampTo(newFreq, 4); // Ramp over 4 seconds
-
-            // 2. Synth Tone Morphing
-            // Change how "metallic" the keys sound
-            const harmonicity = 1 + (Math.sin(now * 0.1) * 0.5); 
-            keys.set({ harmonicity: harmonicity });
-
-            // 3. Chord Progression Swap
-            // Every ~45 seconds, swap the emotion
-            if (Math.random() > 0.8) {
-                currentProgression = (currentProgression === progressionA) ? progressionB : progressionA;
-            }
+        function playKick(time) {
+            kick.triggerAttackRelease("C1", "8n", time);
+            // Sidechain Ducking (Brief volume drop)
+            sidechainMult.setValueAtTime(0.2, time);
+            sidechainMult.linearRampToValueAtTime(1, time + 0.15);
         }
 
-        // 5. UI UPDATES
-        function updateUI(phase) {
-            const phaseNames = ["Intro / Drift", "Building Up", "Full Groove", "Breakdown"];
-            document.getElementById('ui-phase').innerText = phaseNames[phase];
-            
-            // Visualizer bar
-            const beat = measureCount % 16;
-            document.getElementById('loader').style.width = (beat/16)*100 + "%";
-
-            // Update text readouts
-            document.getElementById('ui-filter').innerText = Math.floor(masterFilter.frequency.value) + "Hz";
-            document.getElementById('ui-key').innerText = (currentProgression === progressionA) ? "Natural Minor" : "Deep Jazz";
-            document.getElementById('ui-drift').innerText = Math.floor(keys.get().harmonicity * 100) + "% FM";
+        function visualize(step) {
+            const bars = document.querySelectorAll('.vis-bar');
+            const index = Math.floor(step / 4);
+            bars.forEach(b => b.classList.remove('vis-active'));
+            if(bars[index]) bars[index].classList.add('vis-active');
         }
 
-        // --- BUTTON HANDLER ---
+        // --- CONTROLS ---
         const btn = document.getElementById('playBtn');
+        const volSlider = document.getElementById('volumeSlider');
+
+        volSlider.addEventListener('input', (e) => {
+            if(masterGain) {
+                masterGain.gain.rampTo(e.target.value / 100, 0.1);
+            }
+        });
+
         btn.addEventListener('click', async () => {
             if(!isPlaying) {
                 await startSystem();
                 isPlaying = true;
-                btn.innerText = "TERMINATE";
-                btn.style.color = "#ff5555";
-                btn.style.borderColor = "#ff5555";
+                btn.innerText = "STOP MUSIC";
+                btn.style.background = "#ff5555";
+                btn.style.color = "#fff";
             } else {
                 Tone.Transport.stop();
                 Tone.Destination.mute = true;
