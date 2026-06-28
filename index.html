@@ -7,16 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <style>
   :root{
-    --ink:#15110d;        /* warm near-black bg */
-    --char:#211a13;       /* panel */
-    --char2:#2b2218;      /* raised panel */
-    --line:#3a2e20;       /* hairlines */
-    --ember:#e8a23d;      /* lamp-glow amber, primary */
-    --rust:#c4673b;       /* secondary / active */
-    --peach:#f3dcae;      /* warm highlight text */
-    --dust:#b3a188;       /* muted body */
-    --dust2:#7d6f5c;      /* dim labels */
-    --good:#9bb06a;       /* on state */
+    --ink:#15110d; --char:#211a13; --char2:#2b2218; --line:#3a2e20;
+    --ember:#e8a23d; --rust:#c4673b; --peach:#f3dcae; --dust:#b3a188; --dust2:#7d6f5c; --good:#9bb06a;
     --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -24,84 +16,51 @@
   *{box-sizing:border-box;}
   html,body{margin:0;height:100%;}
   body{
-    background:
-      radial-gradient(120% 80% at 50% -10%, #2a2014 0%, var(--ink) 55%, #0d0a07 100%);
-    color:var(--dust);
-    font-family:var(--sans);
-    min-height:100%;
-    overflow-x:hidden;
-    -webkit-font-smoothing:antialiased;
+    background:radial-gradient(120% 80% at 50% -10%, #2a2014 0%, var(--ink) 55%, #0d0a07 100%);
+    color:var(--dust); font-family:var(--sans); min-height:100%; overflow-x:hidden; -webkit-font-smoothing:antialiased;
   }
-  /* film grain + vignette overlays */
-  body::before{
-    content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
-    background:radial-gradient(120% 120% at 50% 40%, transparent 55%, rgba(0,0,0,.55) 100%);
-  }
-  .grain{
-    position:fixed;inset:-50%;pointer-events:none;z-index:51;opacity:.05;mix-blend-mode:overlay;
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+    background:radial-gradient(120% 120% at 50% 40%, transparent 55%, rgba(0,0,0,.55) 100%);}
+  .grain{position:fixed;inset:-50%;pointer-events:none;z-index:51;opacity:.05;mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    animation:grain 7s steps(6) infinite;
-  }
-  @keyframes grain{
-    0%{transform:translate(0,0)} 20%{transform:translate(-8%,5%)} 40%{transform:translate(6%,-7%)}
-    60%{transform:translate(-5%,8%)} 80%{transform:translate(8%,4%)} 100%{transform:translate(0,0)}
-  }
+    animation:grain 7s steps(6) infinite;}
+  @keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-8%,5%)}40%{transform:translate(6%,-7%)}
+    60%{transform:translate(-5%,8%)}80%{transform:translate(8%,4%)}100%{transform:translate(0,0)}}
 
   .wrap{max-width:560px;margin:0 auto;padding:28px 20px 64px;position:relative;z-index:1;}
-
   header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px;}
   .brand{font-family:var(--mono);font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:var(--ember);}
   .brand b{color:var(--peach);font-weight:600;}
   .counter{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--dust2);}
 
-  /* ---- signature: the reel ---- */
   .stage{display:flex;flex-direction:column;align-items:center;margin:18px 0 10px;}
-  .lamp{
-    position:relative;width:230px;height:230px;display:grid;place-items:center;
-    border-radius:50%;
-  }
-  .lamp::after{ /* lamp pool glow */
-    content:"";position:absolute;inset:-40px;border-radius:50%;z-index:-1;
+  .lamp{position:relative;width:230px;height:230px;display:grid;place-items:center;border-radius:50%;}
+  .lamp::after{content:"";position:absolute;inset:-40px;border-radius:50%;z-index:-1;
     background:radial-gradient(circle, rgba(232,162,61,.30) 0%, rgba(232,162,61,.06) 45%, transparent 70%);
-    filter:blur(6px);
-    transition:opacity .6s ease;
-    opacity:.4;
-  }
+    filter:blur(6px);transition:opacity .6s ease;opacity:.4;}
   .lamp.live::after{opacity:1;}
-  .reel{
-    width:208px;height:208px;border-radius:50%;position:relative;
-    background:
-      repeating-radial-gradient(circle at 50% 50%, #0c0a08 0 2px, #161210 2px 4px) ,
+  .reel{width:208px;height:208px;border-radius:50%;position:relative;
+    background:repeating-radial-gradient(circle at 50% 50%, #0c0a08 0 2px, #161210 2px 4px),
       radial-gradient(circle at 38% 34%, #2a241d, #0a0807 75%);
-    box-shadow: inset 0 0 30px rgba(0,0,0,.9), 0 12px 40px rgba(0,0,0,.6), 0 0 0 6px #100c09, 0 0 0 8px #2a2017;
-    animation:spin 4.2s linear infinite;
-    animation-play-state:paused;
-    will-change:transform;
-  }
+    box-shadow:inset 0 0 30px rgba(0,0,0,.9), 0 12px 40px rgba(0,0,0,.6), 0 0 0 6px #100c09, 0 0 0 8px #2a2017;
+    animation:spin 4.2s linear infinite;animation-play-state:paused;will-change:transform;}
   .reel.spin{animation-play-state:running;}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .label{
-    position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;
+  .label{position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;
     background:radial-gradient(circle at 40% 35%, var(--ember), var(--rust) 80%);
     display:grid;place-items:center;color:#1a1209;font-family:var(--mono);font-size:9px;
-    letter-spacing:.18em;text-transform:uppercase;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25), 0 0 18px rgba(232,162,61,.5);
-  }
+    letter-spacing:.18em;text-transform:uppercase;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25), 0 0 18px rgba(232,162,61,.5);}
   .label .dot{width:7px;height:7px;border-radius:50%;background:#1a1209;position:absolute;}
 
   .readout{font-family:var(--mono);text-align:center;margin-top:18px;line-height:1.7;}
   .chip-now{color:var(--peach);font-size:22px;letter-spacing:.04em;}
   .meta-now{color:var(--dust2);font-size:11px;letter-spacing:.22em;text-transform:uppercase;}
 
-  /* ---- transport ---- */
-  .play{
-    margin:20px auto 4px;display:flex;align-items:center;justify-content:center;gap:12px;
+  .play{margin:20px auto 4px;display:flex;align-items:center;justify-content:center;gap:12px;
     width:100%;max-width:240px;padding:14px 0;cursor:pointer;
-    background:linear-gradient(#332617,#241b11);color:var(--peach);
-    border:1px solid var(--line);border-radius:14px;
+    background:linear-gradient(#332617,#241b11);color:var(--peach);border:1px solid var(--line);border-radius:14px;
     font-family:var(--mono);font-size:13px;letter-spacing:.22em;text-transform:uppercase;
-    box-shadow:0 6px 18px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
-    transition:transform .08s ease, border-color .2s ease;
-  }
+    box-shadow:0 6px 18px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);transition:transform .08s ease, border-color .2s ease;}
   .play:hover{border-color:var(--ember);}
   .play:active{transform:translateY(1px);}
   .play .ico{width:0;height:0;border-style:solid;border-width:8px 0 8px 13px;border-color:transparent transparent transparent var(--ember);}
@@ -109,82 +68,53 @@
   .play.on .ico::before,.play.on .ico::after{content:"";position:absolute;top:0;width:4px;height:14px;background:var(--ember);}
   .play.on .ico::before{left:0;} .play.on .ico::after{right:0;}
 
-  /* ---- sections ---- */
   .sect{margin-top:26px;}
-  .sect > .head{
-    font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;
-    color:var(--dust2);margin-bottom:12px;display:flex;align-items:center;gap:10px;
-  }
+  .sect > .head{font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--dust2);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
   .sect > .head::after{content:"";flex:1;height:1px;background:var(--line);}
 
   .vibes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .vibe{
-    padding:12px 4px;border:1px solid var(--line);border-radius:11px;background:var(--char);
+  .vibe{padding:12px 4px;border:1px solid var(--line);border-radius:11px;background:var(--char);
     color:var(--dust);font-family:var(--mono);font-size:11px;letter-spacing:.12em;
-    text-transform:uppercase;cursor:pointer;text-align:center;transition:.18s;
-  }
+    text-transform:uppercase;cursor:pointer;text-align:center;transition:.18s;}
   .vibe:hover{border-color:var(--dust2);color:var(--peach);}
-  .vibe.active{background:linear-gradient(#3a2a16,#2a1f12);border-color:var(--ember);color:var(--peach);
-    box-shadow:0 0 16px rgba(232,162,61,.15);}
+  .vibe.active{background:linear-gradient(#3a2a16,#2a1f12);border-color:var(--ember);color:var(--peach);box-shadow:0 0 16px rgba(232,162,61,.15);}
 
-  .faders{display:flex;flex-direction:column;gap:16px;}
-  .fader{display:grid;grid-template-columns:64px 1fr 44px;align-items:center;gap:12px;}
-  .fader label{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dust);}
+  .faders{display:flex;flex-direction:column;gap:15px;}
+  .fader{display:grid;grid-template-columns:70px 1fr 50px;align-items:center;gap:12px;}
+  .fader label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dust);}
   .fader output{font-family:var(--mono);font-size:11px;color:var(--ember);text-align:right;}
-  input[type=range]{
-    -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
-    background:linear-gradient(var(--line),var(--line));outline:none;cursor:pointer;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
-    background:radial-gradient(circle at 38% 35%, var(--ember), var(--rust));
-    border:2px solid #140e08;box-shadow:0 0 10px rgba(232,162,61,.5);
-  }
-  input[type=range]::-moz-range-thumb{
-    width:16px;height:16px;border-radius:50%;border:2px solid #140e08;
-    background:radial-gradient(circle at 38% 35%, var(--ember), var(--rust));box-shadow:0 0 10px rgba(232,162,61,.5);
-  }
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
+    background:linear-gradient(var(--line),var(--line));outline:none;cursor:pointer;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 38% 35%, var(--ember), var(--rust));border:2px solid #140e08;box-shadow:0 0 10px rgba(232,162,61,.5);}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;border:2px solid #140e08;
+    background:radial-gradient(circle at 38% 35%, var(--ember), var(--rust));box-shadow:0 0 10px rgba(232,162,61,.5);}
 
   .layers{display:flex;flex-wrap:wrap;gap:8px;}
-  .layer{
-    padding:9px 14px;border:1px solid var(--line);border-radius:20px;background:var(--char);
+  .layer{padding:9px 14px;border:1px solid var(--line);border-radius:20px;background:var(--char);
     color:var(--dust2);font-family:var(--mono);font-size:11px;letter-spacing:.1em;
-    text-transform:uppercase;cursor:pointer;transition:.16s;display:flex;align-items:center;gap:8px;
-  }
+    text-transform:uppercase;cursor:pointer;transition:.16s;display:flex;align-items:center;gap:8px;}
   .layer .led{width:7px;height:7px;border-radius:50%;background:var(--dust2);transition:.16s;}
   .layer.on{color:var(--peach);border-color:var(--good);}
   .layer.on .led{background:var(--good);box-shadow:0 0 8px var(--good);}
 
-  .keyrow{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:12px;}
-  select{
-    width:100%;padding:10px 12px;background:var(--char);color:var(--peach);
-    border:1px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:12px;
-    letter-spacing:.1em;cursor:pointer;
-  }
-  .keyrow label{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dust);}
+  .keyrow{display:grid;grid-template-columns:70px 1fr;align-items:center;gap:12px;}
+  select{width:100%;padding:10px 12px;background:var(--char);color:var(--peach);
+    border:1px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;cursor:pointer;}
+  .keyrow label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dust);}
 
-  .shuffle{
-    margin-top:24px;width:100%;padding:13px;cursor:pointer;
-    background:transparent;border:1px dashed var(--line);border-radius:12px;color:var(--dust);
-    font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:.18s;
-  }
+  .shuffle{margin-top:24px;width:100%;padding:13px;cursor:pointer;background:transparent;
+    border:1px dashed var(--line);border-radius:12px;color:var(--dust);
+    font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:.18s;}
   .shuffle:hover{border-color:var(--rust);color:var(--peach);}
 
-  footer{margin-top:30px;text-align:center;font-family:var(--mono);font-size:10px;
-    letter-spacing:.14em;color:var(--dust2);line-height:1.8;}
-
+  footer{margin-top:30px;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dust2);line-height:1.8;}
   .err{display:none;margin-top:14px;padding:12px;border:1px solid var(--rust);border-radius:10px;
     color:var(--peach);font-family:var(--mono);font-size:11px;text-align:center;}
-
   :focus-visible{outline:2px solid var(--ember);outline-offset:3px;}
-
-  @media (prefers-reduced-motion: reduce){
-    .reel,.grain{animation:none !important;}
-  }
-  @media (max-width:420px){
-    .vibes{grid-template-columns:repeat(2,1fr);}
-    .lamp{width:200px;height:200px;} .reel{width:182px;height:182px;}
-  }
+  @media (prefers-reduced-motion: reduce){.reel,.grain{animation:none !important;}}
+  @media (max-width:420px){.vibes{grid-template-columns:repeat(2,1fr);}.lamp{width:200px;height:200px;}.reel{width:182px;height:182px;}}
 </style>
 </head>
 <body>
@@ -197,22 +127,18 @@
 
   <section class="stage">
     <div class="lamp" id="lamp">
-      <div class="reel" id="reel">
-        <div class="label">side a<span class="dot"></span></div>
-      </div>
+      <div class="reel" id="reel"><div class="label">side a<span class="dot"></span></div></div>
     </div>
     <div class="readout">
       <div class="chip-now" id="chordNow">press play</div>
       <div class="meta-now" id="metaNow">nothing spinning yet</div>
     </div>
-    <button class="play" id="play" aria-label="Play">
-      <span class="ico"></span><span id="playTxt">play</span>
-    </button>
+    <button class="play" id="play" aria-label="Play"><span class="ico"></span><span id="playTxt">play</span></button>
     <div class="err" id="err">audio engine couldn't load — check your connection and refresh.</div>
   </section>
 
   <section class="sect">
-    <div class="head">the mood</div>
+    <div class="head">the mood (just a slider snapshot)</div>
     <div class="vibes" id="vibes">
       <button class="vibe" data-vibe="sleepy">sleepy</button>
       <button class="vibe active" data-vibe="chill">chill</button>
@@ -222,33 +148,17 @@
   </section>
 
   <section class="sect">
-    <div class="head">shape it (always stays lofi)</div>
+    <div class="head">shape it — every knob is here</div>
     <div class="faders">
-      <div class="fader">
-        <label for="tempo">tempo</label>
-        <input type="range" id="tempo" min="60" max="100" step="1" value="82" />
-        <output id="tempoV">82 bpm</output>
-      </div>
-      <div class="fader">
-        <label for="warmth">warmth</label>
-        <input type="range" id="warmth" min="0" max="100" step="1" value="42" />
-        <output id="warmthV">42%</output>
-      </div>
-      <div class="fader">
-        <label for="reverb">space</label>
-        <input type="range" id="reverb" min="0" max="100" step="1" value="34" />
-        <output id="reverbV">34%</output>
-      </div>
-      <div class="fader">
-        <label for="melody">melody</label>
-        <input type="range" id="melody" min="0" max="100" step="1" value="24" />
-        <output id="melodyV">24%</output>
-      </div>
-      <div class="fader">
-        <label for="volume">volume</label>
-        <input type="range" id="volume" min="0" max="100" step="1" value="80" />
-        <output id="volumeV">80%</output>
-      </div>
+      <div class="fader"><label for="tempo">tempo</label><input type="range" id="tempo" min="60" max="100" step="1" value="82" /><output id="tempoV">82 bpm</output></div>
+      <div class="fader"><label for="swing">swing</label><input type="range" id="swing" min="0" max="100" step="1" value="60" /><output id="swingV">60%</output></div>
+      <div class="fader"><label for="groove">groove</label><input type="range" id="groove" min="0" max="100" step="1" value="40" /><output id="grooveV">40%</output></div>
+      <div class="fader"><label for="melody">melody</label><input type="range" id="melody" min="0" max="100" step="1" value="24" /><output id="melodyV">24%</output></div>
+      <div class="fader"><label for="warmth">warmth</label><input type="range" id="warmth" min="0" max="100" step="1" value="42" /><output id="warmthV">42%</output></div>
+      <div class="fader"><label for="reverb">space</label><input type="range" id="reverb" min="0" max="100" step="1" value="34" /><output id="reverbV">34%</output></div>
+      <div class="fader"><label for="rain">rain</label><input type="range" id="rain" min="0" max="100" step="1" value="0" /><output id="rainV">0%</output></div>
+      <div class="fader"><label for="crackle">vinyl</label><input type="range" id="crackle" min="0" max="100" step="1" value="45" /><output id="crackleV">45%</output></div>
+      <div class="fader"><label for="volume">volume</label><input type="range" id="volume" min="0" max="100" step="1" value="85" /><output id="volumeV">85%</output></div>
     </div>
   </section>
 
@@ -263,369 +173,245 @@
         <option value="2">D minor (Dm)</option>
         <option value="5">F major</option>
         <option value="4">E minor (Em)</option>
-        <option value="10">B♭ major</option>
-        <option value="3">E♭ major</option>
+        <option value="10">B&#9837; major</option>
+        <option value="3">E&#9837; major</option>
       </select>
     </div>
   </section>
 
   <section class="sect">
-    <div class="head">layers</div>
+    <div class="head">layers (mute / unmute)</div>
     <div class="layers" id="layers">
       <button class="layer on" data-layer="keys"><span class="led"></span>keys</button>
       <button class="layer on" data-layer="bass"><span class="led"></span>bass</button>
       <button class="layer on" data-layer="drums"><span class="led"></span>drums</button>
       <button class="layer on" data-layer="melody"><span class="led"></span>melody</button>
-      <button class="layer on" data-layer="crackle"><span class="led"></span>vinyl crackle</button>
-      <button class="layer" data-layer="rain"><span class="led"></span>rain</button>
     </div>
   </section>
 
-  <button class="shuffle" id="shuffle">↻ shuffle the mood</button>
-
-  <footer>generated live · never the same twice<br/>everything below is synthesized in your browser</footer>
+  <button class="shuffle" id="shuffle">&#8635; shuffle the progression</button>
+  <footer>generated live · never the same twice<br/>presets only move sliders — nothing is hidden</footer>
 </main>
 
 <script>
 "use strict";
-/* ============================================================
-   MUSIC THEORY
-============================================================ */
+/* ---------------- music theory ---------------- */
 const NOTE = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-const MAJ  = [0,2,4,5,7,9,11];               // major scale steps
-const QUAL = {
-  maj7:[0,4,7,11], maj9:[0,4,7,11,14],
-  min7:[0,3,7,10], min9:[0,3,7,10,14],
-  dom7:[0,4,7,10], dom9:[0,4,7,10,14],
-  m6:[0,3,7,9]
-};
+const MAJ  = [0,2,4,5,7,9,11];
+const QUAL = {maj7:[0,4,7,11],maj9:[0,4,7,11,14],min7:[0,3,7,10],min9:[0,3,7,10,14],dom7:[0,4,7,10],dom9:[0,4,7,10,14],m6:[0,3,7,9]};
 const SUFFIX = {maj7:'maj7',maj9:'maj9',min7:'m7',min9:'m9',dom7:'7',dom9:'9',m6:'m6'};
-// progressions as [scaleDegree(0-6), quality]
 const PROGS = [
-  [[1,'min7'],[4,'dom9'],[0,'maj9'],[5,'min7']],   // ii V I vi
-  [[0,'maj9'],[5,'min7'],[1,'min7'],[4,'dom9']],   // I vi ii V
-  [[3,'maj7'],[0,'maj9'],[5,'min7'],[4,'dom7']],   // IV I vi V
-  [[1,'min9'],[4,'dom7'],[2,'min7'],[5,'min7']],   // ii V iii vi
-  [[0,'maj7'],[3,'maj7'],[1,'min7'],[4,'dom9']],   // I IV ii V
-  [[5,'min9'],[1,'min7'],[4,'dom9'],[0,'maj9']],   // vi ii V I
-  [[0,'maj9'],[3,'maj7'],[4,'dom9'],[3,'maj7']],   // I IV V IV
+  [[1,'min7'],[4,'dom9'],[0,'maj9'],[5,'min7']],
+  [[0,'maj9'],[5,'min7'],[1,'min7'],[4,'dom9']],
+  [[3,'maj7'],[0,'maj9'],[5,'min7'],[4,'dom7']],
+  [[1,'min9'],[4,'dom7'],[2,'min7'],[5,'min7']],
+  [[0,'maj7'],[3,'maj7'],[1,'min7'],[4,'dom9']],
+  [[5,'min9'],[1,'min7'],[4,'dom9'],[0,'maj9']],
+  [[0,'maj9'],[3,'maj7'],[4,'dom9'],[3,'maj7']]
 ];
 const PENT = [0,2,4,7,9];
-
 const midiName = m => NOTE[((m%12)+12)%12] + (Math.floor(m/12)-1);
 const rand = (a,b)=>a+Math.random()*(b-a);
 const pick = a => a[(Math.random()*a.length)|0];
 
 function buildChord(keyPc, degree, quality){
-  const degPc = (keyPc + MAJ[degree]) % 12;
-  let vr = 60 + degPc; if(vr>67) vr -= 12;          // keep keys in a cozy register
-  const ivs = QUAL[quality];
-  const notes = ivs.map(i=>midiName(vr+i));
-  const chordPcs = ivs.map(i=>(vr+i)%12);
-  const allowed = new Set([...chordPcs, ...PENT.map(p=>(keyPc+p)%12)]);
-  return {
-    notes,
-    bass: midiName(36 + degPc),
-    fifth: midiName(36 + degPc + 7),
-    melBase: vr + 12,
-    allowed,
-    name: NOTE[degPc] + SUFFIX[quality]
-  };
+  const degPc=(keyPc+MAJ[degree])%12;
+  let vr=60+degPc; if(vr>67) vr-=12;
+  const ivs=QUAL[quality];
+  const chordPcs=ivs.map(i=>(vr+i)%12);
+  const allowed=new Set([...chordPcs,...PENT.map(p=>(keyPc+p)%12)]);
+  return {notes:ivs.map(i=>midiName(vr+i)),bass:midiName(36+degPc),fifth:midiName(36+degPc+7),
+          melBase:vr+12,allowed,name:NOTE[degPc]+SUFFIX[quality]};
 }
 
-/* ============================================================
-   STATE + PRESETS
-============================================================ */
-const state = {
-  vibe:'chill', keyPc:0, bpm:82, warmth:42, reverb:34, melody:24, volume:80,
-  layers:{keys:true,bass:true,drums:true,melody:true,crackle:true,rain:false}
-};
+/* ---------------- state + presets (full snapshots) ---------------- */
+const state = {vibe:'chill',keyPc:0,bpm:82,swing:60,groove:40,melody:24,warmth:42,reverb:34,rain:0,crackle:45,volume:85,
+               layers:{keys:true,bass:true,drums:true,melody:true}};
 const PRESET = {
-  sleepy:{bpm:68, warmth:62, reverb:46, melody:12, swing:0.18, kick:[0,8], jazzy:false, rain:false},
-  chill :{bpm:82, warmth:42, reverb:34, melody:24, swing:0.36, kick:[0,10], jazzy:false, rain:false},
-  jazzy :{bpm:90, warmth:30, reverb:24, melody:42, swing:0.52, kick:[0,6,10], jazzy:true,  rain:false},
-  rainy :{bpm:74, warmth:54, reverb:40, melody:16, swing:0.30, kick:[0,10], jazzy:false, rain:true}
+  sleepy:{tempo:68,swing:30,groove:10,melody:12,warmth:62,reverb:46,rain:0, crackle:45},
+  chill :{tempo:82,swing:60,groove:40,melody:24,warmth:42,reverb:34,rain:0, crackle:45},
+  jazzy :{tempo:90,swing:87,groove:80,melody:42,warmth:30,reverb:24,rain:0, crackle:40},
+  rainy :{tempo:74,swing:50,groove:40,melody:16,warmth:54,reverb:40,rain:55,crackle:35}
 };
 
-/* ============================================================
-   AUDIO GRAPH (built lazily on first play)
-============================================================ */
-let A = null, started = false, step = 0, bar = 0;
-let prog = pick(PROGS), chordIdx = 0, cur = null;
+/* ---------------- derived mappings ---------------- */
+const warmthFreq = v => 6200-(v/100)*(6200-1000);   // higher = warmer = darker
+const swingAmt   = v => (v/100)*0.6;
+const masterGain = v => (v/100)*3.0;                  // makeup gain for loudness
+const rainGainV  = v => (v/100)*0.32;
+const bedGainV   = v => (v/100)*0.10;
+function kickSteps(g){ return g<25?[0,8] : g<60?[0,10] : [0,6,10]; }
+const ghostProb = g => g>50?(g-50)/50*0.4:0;
+const walkChance= g => g>50?(g-50)/50:0;
 
-function warmthFreq(v){ return 6200 - (v/100)*(6200-1000); }  // higher slider = warmer = lower cutoff
+/* ---------------- audio graph ---------------- */
+let A=null, started=false, step=0;
+let prog=pick(PROGS), chordIdx=0, cur=null;
 
 async function buildAudio(){
   await Tone.start();
-  const limiter = new Tone.Limiter(-1).toDestination();
-  const meter   = new Tone.Meter();
-  const master  = new Tone.Gain(state.volume/100).connect(limiter);
+  const limiter=new Tone.Limiter(-0.4).toDestination();
+  const meter=new Tone.Meter();
+  const master=new Tone.Gain(masterGain(state.volume)).connect(limiter);
   master.connect(meter);
-  const comp    = new Tone.Compressor({threshold:-20, ratio:3, attack:0.01, release:0.25}).connect(master);
-  const warmth  = new Tone.Filter({type:'lowpass', frequency:warmthFreq(state.warmth), Q:0.5, rolloff:-24}).connect(comp);
-  const hp      = new Tone.Filter({type:'highpass', frequency:38}).connect(warmth);
-  const reverb  = new Tone.Reverb({decay:4.5, preDelay:0.02, wet:1}).connect(hp);
-  const send    = new Tone.Gain(state.reverb/100).connect(reverb);   // reverb amount
-  const dry     = new Tone.Gain(1).connect(hp);
+  const comp=new Tone.Compressor({threshold:-22,ratio:3,attack:0.01,release:0.25}).connect(master);
+  const warmth=new Tone.Filter({type:'lowpass',frequency:warmthFreq(state.warmth),Q:0.5,rolloff:-24}).connect(comp);
+  const hp=new Tone.Filter({type:'highpass',frequency:38}).connect(warmth);
+  const reverb=new Tone.Reverb({decay:4.5,preDelay:0.02,wet:1}).connect(hp);
+  const send=new Tone.Gain(state.reverb/100).connect(reverb);
+  const dry=new Tone.Gain(1).connect(hp);
 
-  // --- keys: FM electric-piano w/ chorus + wow/flutter ---
-  const keys = new Tone.PolySynth(Tone.FMSynth);
-  keys.set({
-    harmonicity:3, modulationIndex:7,
-    oscillator:{type:'sine'},
-    envelope:{attack:0.008, decay:1.4, sustain:0.18, release:1.8},
-    modulation:{type:'sine'},
-    modulationEnvelope:{attack:0.01, decay:0.4, sustain:0, release:0.3},
-    volume:-12
-  });
-  const chorus = new Tone.Chorus({frequency:0.6, delayTime:3.5, depth:0.4, wet:0.3}).start();
-  const wow    = new Tone.Vibrato({frequency:0.35, depth:0.06});
-  keys.connect(chorus); chorus.connect(wow); wow.fan(dry, send);
+  const keys=new Tone.PolySynth(Tone.FMSynth);
+  keys.set({harmonicity:3,modulationIndex:7,oscillator:{type:'sine'},
+    envelope:{attack:0.008,decay:1.4,sustain:0.18,release:1.8},
+    modulation:{type:'sine'},modulationEnvelope:{attack:0.01,decay:0.4,sustain:0,release:0.3},volume:-9});
+  const chorus=new Tone.Chorus({frequency:0.6,delayTime:3.5,depth:0.4,wet:0.3}).start();
+  const wow=new Tone.Vibrato({frequency:0.35,depth:0.06});
+  keys.connect(chorus); chorus.connect(wow); wow.fan(dry,send);
 
-  // --- bass ---
-  const bass = new Tone.MonoSynth({
-    oscillator:{type:'triangle'},
-    envelope:{attack:0.02, decay:0.3, sustain:0.55, release:0.7},
-    filter:{Q:1, type:'lowpass'},
-    filterEnvelope:{attack:0.02, decay:0.2, baseFrequency:140, octaves:1.8, sustain:0.4},
-    volume:-9
-  });
+  const bass=new Tone.MonoSynth({oscillator:{type:'triangle'},
+    envelope:{attack:0.02,decay:0.3,sustain:0.55,release:0.7},filter:{Q:1,type:'lowpass'},
+    filterEnvelope:{attack:0.02,decay:0.2,baseFrequency:140,octaves:1.8,sustain:0.4},volume:-6});
   bass.connect(dry);
 
-  // --- drums ---
-  const kick = new Tone.MembraneSynth({pitchDecay:0.05, octaves:6,
-    envelope:{attack:0.001, decay:0.42, sustain:0, release:0.4}, volume:-5});
-  kick.connect(dry);
-  const snare = new Tone.NoiseSynth({noise:{type:'white'},
-    envelope:{attack:0.001, decay:0.16, sustain:0}, volume:-16});
-  const snareF = new Tone.Filter({type:'bandpass', frequency:1700, Q:0.7});
-  snare.connect(snareF); snareF.fan(dry, send);
-  const hat = new Tone.NoiseSynth({noise:{type:'white'},
-    envelope:{attack:0.001, decay:0.035, sustain:0}, volume:-24});
-  const hatF = new Tone.Filter({type:'highpass', frequency:7200});
-  hat.connect(hatF); hatF.connect(dry);
+  const kick=new Tone.MembraneSynth({pitchDecay:0.05,octaves:6,
+    envelope:{attack:0.001,decay:0.42,sustain:0,release:0.4},volume:-2}); kick.connect(dry);
+  const snare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.16,sustain:0},volume:-13});
+  const snareF=new Tone.Filter({type:'bandpass',frequency:1700,Q:0.7}); snare.connect(snareF); snareF.fan(dry,send);
+  const hat=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.035,sustain:0},volume:-21});
+  const hatF=new Tone.Filter({type:'highpass',frequency:7200}); hat.connect(hatF); hatF.connect(dry);
 
-  // --- melody ---
-  const mel = new Tone.Synth({oscillator:{type:'triangle'},
-    envelope:{attack:0.02, decay:0.5, sustain:0.08, release:0.7}, volume:-15});
-  const melVib = new Tone.Vibrato({frequency:5, depth:0.04});
-  mel.connect(melVib); melVib.fan(dry, send);
+  const mel=new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.5,sustain:0.08,release:0.7},volume:-12});
+  const melVib=new Tone.Vibrato({frequency:5,depth:0.04}); mel.connect(melVib); melVib.fan(dry,send);
 
-  // --- vinyl crackle (steady brown bed + random pops) ---
-  const bed = new Tone.Noise('brown');
-  const bedF = new Tone.Filter({type:'lowpass', frequency:4200});
-  const crackleGain = new Tone.Gain(state.layers.crackle?0.05:0).connect(master);
+  const bed=new Tone.Noise('brown');
+  const bedF=new Tone.Filter({type:'lowpass',frequency:4200});
+  const crackleGain=new Tone.Gain(bedGainV(state.crackle)).connect(master);
   bed.connect(bedF); bedF.connect(crackleGain); bed.start();
-  const pop = new Tone.NoiseSynth({noise:{type:'pink'},
-    envelope:{attack:0.001, decay:0.018, sustain:0}, volume:-20});
-  const popF = new Tone.Filter({type:'highpass', frequency:2200});
-  const popGain = new Tone.Gain(state.layers.crackle?1:0).connect(master);
-  pop.connect(popF); popF.connect(popGain);
+  const pop=new Tone.NoiseSynth({noise:{type:'pink'},envelope:{attack:0.001,decay:0.018,sustain:0},volume:-18});
+  const popF=new Tone.Filter({type:'highpass',frequency:2200});
+  const popGain=new Tone.Gain(1).connect(master); pop.connect(popF); popF.connect(popGain);
 
-  // --- rain ---
-  const rain = new Tone.Noise('pink');
-  const rainLP = new Tone.Filter({type:'lowpass', frequency:4800, Q:0.4});
-  const rainHP = new Tone.Filter({type:'highpass', frequency:420});
-  const rainGain = new Tone.Gain(state.layers.rain?0.18:0).connect(master);
+  const rain=new Tone.Noise('pink');
+  const rainLP=new Tone.Filter({type:'lowpass',frequency:4800,Q:0.4});
+  const rainHP=new Tone.Filter({type:'highpass',frequency:420});
+  const rainGain=new Tone.Gain(rainGainV(state.rain)).connect(master);
   rain.connect(rainLP); rainLP.connect(rainHP); rainHP.connect(rainGain); rain.start();
-  const rainLFO = new Tone.LFO({frequency:0.08, min:3200, max:6200}).start();
-  rainLFO.connect(rainLP.frequency);
+  const rainLFO=new Tone.LFO({frequency:0.08,min:3200,max:6200}).start(); rainLFO.connect(rainLP.frequency);
 
-  A = {limiter,meter,master,comp,warmth,hp,reverb,send,dry,
-       keys,bass,kick,snare,hat,mel,
-       crackleGain,pop,popGain,bedF,rainGain};
+  A={meter,master,warmth,reverb,send,keys,bass,kick,snare,hat,mel,crackleGain,pop,rainGain};
 
-  Tone.Transport.bpm.value = state.bpm;
-  Tone.Transport.swingSubdivision = '8n';
-  Tone.Transport.swing = PRESET[state.vibe].swing;
-  Tone.Transport.scheduleRepeat(tick, '16n');
-
+  Tone.Transport.bpm.value=state.bpm;
+  Tone.Transport.swingSubdivision='8n';
+  Tone.Transport.swing=swingAmt(state.swing);
+  Tone.Transport.scheduleRepeat(tick,'16n');
   meterLoop();
 }
 
-/* ============================================================
-   THE SCHEDULER — one tick = a 16th note
-============================================================ */
+/* ---------------- scheduler ---------------- */
 function tick(time){
-  const p = PRESET[state.vibe];
-  const s = step % 16;
+  const s=step%16, g=state.groove, kp=kickSteps(g);
 
-  // advance harmony at the top of each bar
   if(s===0){
-    if(chordIdx >= prog.length){
-      chordIdx = 0; bar++;
-      if(Math.random() < 0.5) prog = pick(PROGS);   // keep it evolving
-    }
-    const [deg,q] = prog[chordIdx];
-    cur = buildChord(state.keyPc, deg, q);
-    chordIdx++;
-    drawNow(cur, time);
-
-    if(state.layers.keys){
-      A.keys.triggerAttackRelease(cur.notes, '2n.', time + rand(0,0.012), rand(0.35,0.5));
-    }
+    if(chordIdx>=prog.length){ chordIdx=0; if(Math.random()<0.5) prog=pick(PROGS); }
+    const [deg,q]=prog[chordIdx]; cur=buildChord(state.keyPc,deg,q); chordIdx++;
+    drawNow(cur,time);
+    if(state.layers.keys) A.keys.triggerAttackRelease(cur.notes,'2n.',time+rand(0,0.012),rand(0.35,0.5));
   }
-
-  // bass
   if(state.layers.bass && cur){
-    if(s===0) A.bass.triggerAttackRelease(cur.bass, '4n.', time+rand(0,0.01), rand(0.6,0.8));
-    if(s===8) A.bass.triggerAttackRelease(p.jazzy?cur.fifth:cur.bass, '4n', time+rand(0,0.01), rand(0.45,0.65));
+    if(s===0) A.bass.triggerAttackRelease(cur.bass,'4n.',time+rand(0,0.01),rand(0.6,0.8));
+    if(s===8) A.bass.triggerAttackRelease(Math.random()<walkChance(g)?cur.fifth:cur.bass,'4n',time+rand(0,0.01),rand(0.45,0.65));
   }
-
-  // drums
   if(state.layers.drums){
-    if(p.kick.includes(s)) A.kick.triggerAttackRelease('C1','8n',time, rand(0.7,0.92));
-    if(s===4 || s===12)   A.snare.triggerAttackRelease('16n',time, rand(0.45,0.65));
-    if(s%2===0)           A.hat.triggerAttackRelease('32n',time, rand(0.12,0.28));
-    else if(p.jazzy && Math.random()<0.35) A.hat.triggerAttackRelease('64n',time, rand(0.08,0.16)); // ghost 16ths
+    if(kp.includes(s)) A.kick.triggerAttackRelease('C1','8n',time,rand(0.7,0.92));
+    if(s===4||s===12)  A.snare.triggerAttackRelease('16n',time,rand(0.45,0.65));
+    if(s%2===0)        A.hat.triggerAttackRelease('32n',time,rand(0.12,0.28));
+    else if(Math.random()<ghostProb(g)) A.hat.triggerAttackRelease('64n',time,rand(0.08,0.16));
   }
-
-  // melody — sparse, in-scale, weighted to chord tones
-  if(state.layers.melody && cur && s%2===0 && Math.random() < state.melody/100){
-    const base = cur.melBase;
-    const cands = [];
+  if(state.layers.melody && cur && s%2===0 && Math.random()<state.melody/100){
+    const base=cur.melBase, cands=[];
     for(let m=base-2;m<=base+10;m++) if(cur.allowed.has(((m%12)+12)%12)) cands.push(m);
-    if(cands.length) A.mel.triggerAttackRelease(midiName(pick(cands)), pick(['8n','4n','8n']), time+rand(0,0.02), rand(0.25,0.45));
+    if(cands.length) A.mel.triggerAttackRelease(midiName(pick(cands)),pick(['8n','4n','8n']),time+rand(0,0.02),rand(0.25,0.45));
   }
-
-  // vinyl pops
-  if(state.layers.crackle && Math.random()<0.45){
-    A.pop.triggerAttackRelease('32n', time, rand(0.1,0.55));
+  if(state.crackle>0 && Math.random()<state.crackle/100*0.6){
+    A.pop.triggerAttackRelease('32n',time,rand(0.1,0.55));
   }
-
   step++;
 }
 
-/* ============================================================
-   UI WIRING
-============================================================ */
-const $ = id => document.getElementById(id);
-const reel=$('reel'), lamp=$('lamp'), play=$('play'), playTxt=$('playTxt');
-let playing = false;
+/* ---------------- ui ---------------- */
+const $=id=>document.getElementById(id);
+const reel=$('reel'),lamp=$('lamp'),play=$('play'),playTxt=$('playTxt');
+let playing=false;
 
 async function togglePlay(){
-  try{
-    if(!started){ await buildAudio(); started=true; }
-  }catch(e){ $('err').style.display='block'; console.error(e); return; }
-
-  if(!playing){
-    Tone.Transport.start();
-    playing=true; play.classList.add('on'); playTxt.textContent='pause';
-    reel.classList.add('spin'); lamp.classList.add('live');
-  }else{
-    Tone.Transport.pause();
-    playing=false; play.classList.remove('on'); playTxt.textContent='play';
-    reel.classList.remove('spin'); lamp.classList.remove('live');
-  }
+  try{ if(!started){ await buildAudio(); started=true; } }
+  catch(e){ $('err').style.display='block'; console.error(e); return; }
+  if(!playing){ Tone.Transport.start(); playing=true; play.classList.add('on'); playTxt.textContent='pause';
+    reel.classList.add('spin'); lamp.classList.add('live'); }
+  else{ Tone.Transport.pause(); playing=false; play.classList.remove('on'); playTxt.textContent='play';
+    reel.classList.remove('spin'); lamp.classList.remove('live'); }
 }
-play.addEventListener('click', togglePlay);
+play.addEventListener('click',togglePlay);
 
-// readout (synced to audio clock)
-function drawNow(c, time){
-  Tone.Draw.schedule(()=>{
-    $('chordNow').textContent = c.name;
-    $('metaNow').textContent = `${NOTE[state.keyPc]} · ${state.bpm} bpm · ${state.vibe}`;
-  }, time);
+function drawNow(c,time){
+  Tone.Draw.schedule(()=>{ $('chordNow').textContent=c.name;
+    $('metaNow').textContent=NOTE[state.keyPc]+' · '+state.bpm+' bpm · '+state.vibe; },time);
 }
-// tape counter
 function counterLoop(){
-  if(playing){
-    const t = Tone.Transport.seconds|0;
-    const mm=String((t/60)|0).padStart(2,'0'), ss=String(t%60).padStart(2,'0');
+  if(playing){ const t=Tone.Transport.seconds|0;
+    const mm=String((t/60)|0).padStart(2,'0'),ss=String(t%60).padStart(2,'0');
     const ff=String((Tone.Transport.ticks/24|0)%30).padStart(2,'0');
-    $('counter').textContent = `${mm}:${ss}:${ff}`;
-  }
+    $('counter').textContent=mm+':'+ss+':'+ff; }
   requestAnimationFrame(counterLoop);
 }
 counterLoop();
-
-// reactive glow from output level
 function meterLoop(){
-  if(A){
-    const db = A.meter.getValue();
-    const v = Math.max(0, Math.min(1, (db+40)/40));
-    lamp.style.setProperty('--lvl', v);
-    if(playing) lamp.querySelector ? (lamp.style.filter = `brightness(${1+v*0.25})`) : 0;
-  }
+  if(A){ const db=A.meter.getValue(); const v=Math.max(0,Math.min(1,(db+40)/40));
+    if(playing) lamp.style.filter='brightness('+(1+v*0.25)+')'; else lamp.style.filter='none'; }
   requestAnimationFrame(meterLoop);
 }
 
-// vibe presets
-$('vibes').addEventListener('click', e=>{
-  const b=e.target.closest('.vibe'); if(!b) return;
-  applyVibe(b.dataset.vibe);
-});
+/* unified param setter — used by sliders AND presets, so they stay in sync */
+const FADERS=['tempo','swing','groove','melody','warmth','reverb','rain','crackle','volume'];
+const fmt=(id,v)=> id==='tempo'? v+' bpm' : v+'%';
+function setParam(id,v){
+  $(id).value=v; $(id+'V').textContent=fmt(id,v);
+  switch(id){
+    case 'tempo':  state.bpm=v;     if(A) Tone.Transport.bpm.rampTo(v,0.3); break;
+    case 'swing':  state.swing=v;   if(A) Tone.Transport.swing=swingAmt(v); break;
+    case 'groove': state.groove=v;  break;
+    case 'melody': state.melody=v;  break;
+    case 'warmth': state.warmth=v;  if(A) A.warmth.frequency.rampTo(warmthFreq(v),0.3); break;
+    case 'reverb': state.reverb=v;  if(A) A.send.gain.rampTo(v/100,0.3); break;
+    case 'rain':   state.rain=v;    if(A) A.rainGain.gain.rampTo(rainGainV(v),0.4); break;
+    case 'crackle':state.crackle=v; if(A) A.crackleGain.gain.rampTo(bedGainV(v),0.4); break;
+    case 'volume': state.volume=v;  if(A) A.master.gain.rampTo(masterGain(v),0.2); break;
+  }
+}
+FADERS.forEach(id=>$(id).addEventListener('input',e=>setParam(id,+e.target.value)));
+
+$('vibes').addEventListener('click',e=>{ const b=e.target.closest('.vibe'); if(b) applyVibe(b.dataset.vibe); });
 function applyVibe(v){
   state.vibe=v;
-  document.querySelectorAll('.vibe').forEach(x=>x.classList.toggle('active', x.dataset.vibe===v));
+  document.querySelectorAll('.vibe').forEach(x=>x.classList.toggle('active',x.dataset.vibe===v));
   const p=PRESET[v];
-  setFader('tempo', p.bpm); setFader('warmth', p.warmth);
-  setFader('reverb', p.reverb); setFader('melody', p.melody);
-  setLayer('rain', p.rain);
-  if(A) Tone.Transport.swing = p.swing;
-  pushAll();
+  for(const k in p) setParam(k,p[k]);   // a preset is literally just slider positions
 }
 
-// faders
-const FADERS={tempo:'tempoV',warmth:'warmthV',reverb:'reverbV',melody:'melodyV',volume:'volumeV'};
-function fmt(id,val){
-  if(id==='tempo') return val+' bpm';
-  return val+'%';
-}
-function setFader(id,val){ $(id).value=val; $(FADERS[id]).textContent=fmt(id,val); }
-Object.keys(FADERS).forEach(id=>{
-  $(id).addEventListener('input', e=>{
-    const val=+e.target.value;
-    $(FADERS[id]).textContent=fmt(id,val);
-    if(id==='tempo'){ state.bpm=val; if(A) Tone.Transport.bpm.rampTo(val,0.3); }
-    if(id==='warmth'){ state.warmth=val; if(A) A.warmth.frequency.rampTo(warmthFreq(val),0.3); }
-    if(id==='reverb'){ state.reverb=val; if(A) A.send.gain.rampTo(val/100,0.3); }
-    if(id==='melody'){ state.melody=val; }
-    if(id==='volume'){ state.volume=val; if(A) A.master.gain.rampTo(val/100,0.2); }
-  });
-});
-function pushAll(){
-  state.bpm=+$('tempo').value; state.warmth=+$('warmth').value;
-  state.reverb=+$('reverb').value; state.melody=+$('melody').value; state.volume=+$('volume').value;
-  if(A){
-    Tone.Transport.bpm.rampTo(state.bpm,0.3);
-    A.warmth.frequency.rampTo(warmthFreq(state.warmth),0.3);
-    A.send.gain.rampTo(state.reverb/100,0.3);
-    A.master.gain.rampTo(state.volume/100,0.2);
-  }
-}
+$('key').addEventListener('change',e=>{ state.keyPc=+e.target.value; });
 
-// key
-$('key').addEventListener('change', e=>{ state.keyPc=+e.target.value; });
-
-// layers
-$('layers').addEventListener('click', e=>{
+$('layers').addEventListener('click',e=>{
   const b=e.target.closest('.layer'); if(!b) return;
-  const k=b.dataset.layer; const on=!state.layers[k];
-  setLayer(k,on);
-});
-function setLayer(k,on){
-  state.layers[k]=on;
-  const b=document.querySelector(`.layer[data-layer="${k}"]`);
-  if(b) b.classList.toggle('on',on);
-  if(A){
-    if(k==='crackle'){ A.crackleGain.gain.rampTo(on?0.05:0,0.4); A.popGain.gain.rampTo(on?1:0,0.4); }
-    if(k==='rain')   { A.rainGain.gain.rampTo(on?0.18:0,0.6); }
-  }
-}
-
-// shuffle the mood
-$('shuffle').addEventListener('click', ()=>{
-  prog = pick(PROGS); chordIdx = 0;
-  $('shuffle').textContent = '↻ new progression queued…';
-  setTimeout(()=>$('shuffle').textContent='↻ shuffle the mood', 900);
+  const k=b.dataset.layer; state.layers[k]=!state.layers[k]; b.classList.toggle('on',state.layers[k]);
 });
 
-// keyboard: space toggles
-document.addEventListener('keydown', e=>{
-  if(e.code==='Space' && e.target.tagName!=='SELECT' && e.target.tagName!=='INPUT'){
-    e.preventDefault(); togglePlay();
-  }
+$('shuffle').addEventListener('click',()=>{ prog=pick(PROGS); chordIdx=0;
+  $('shuffle').textContent='\u21bb new progression queued\u2026';
+  setTimeout(()=>$('shuffle').textContent='\u21bb shuffle the progression',900); });
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&e.target.tagName!=='SELECT'&&e.target.tagName!=='INPUT'){ e.preventDefault(); togglePlay(); }
 });
 </script>
 </body>
